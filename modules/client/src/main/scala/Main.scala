@@ -18,7 +18,7 @@ object Main extends js.JSApp {
   val gridStep = 10
 
   def main() = {
-    Ajax.get("http://localhost:9000/stage").map { response =>
+    Ajax.get("/stage").map { response =>
       val stage = io.circe.parser.parse(response.responseText).flatMap(_.as(StageDecoder)).getOrElse(
         throw new Exception("not a Stage")
       )
@@ -34,8 +34,8 @@ object Main extends js.JSApp {
     canvas.height = 600
     dom.document.body.appendChild(canvas)
 
-
-    val webSocket = new dom.WebSocket("ws://localhost:9000/ws")
+    val wsUrl = WebSocketUrlBuilder.fullUrl("/ws")
+    val webSocket = new dom.WebSocket(wsUrl)
     webSocket.onopen = { _: Event =>
 //      dom.window.alert("Opened WS connection")
     }
