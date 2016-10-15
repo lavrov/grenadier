@@ -10,12 +10,33 @@ libraryDependencies in ThisBuild ++= Seq(
 
 resolvers in ThisBuild += "Bintary JCenter" at "http://jcenter.bintray.com"
 
-lazy val grenadier = project in file(".") aggregate (client, server, sharedJs, sharedJvm)
+lazy val server = (
+  project in file(".")
+    enablePlugins PlayScala
+    disablePlugins PlayLayoutPlugin
+    settings (
+      scalaJSProjects += client,
+      libraryDependencies ++= Seq(
+        "play-circe" %% "play-circe" % "2.5-0.5.1",
+        "com.vmunier" %% "scalajs-scripts" % "1.0.0"
+      ),
+      pipelineStages in Assets += scalaJSPipeline
+    )
+    dependsOn sharedJvm
+    aggregate (client, sharedJvm, sharedJs)
+)
 
-lazy val client = project in file("./modules/client") dependsOn sharedJs
-
-lazy val server = project in file("./modules/server") dependsOn (sharedJvm) settings(
-  scalaJSProjects += client
+lazy val client = (
+  project in file("./modules/client")
+    enablePlugins (ScalaJSPlugin, ScalaJSWeb)
+    settings (
+      libraryDependencies ++= Seq(
+        "org.scala-js" %%% "scalajs-dom" % "0.9.0",
+        "io.circe" %%% "circe-parser" % "0.5.3"
+      ),
+      persistLauncher := true
+    )
+    dependsOn sharedJs
 )
 
 lazy val shared = crossProject crossType CrossType.Pure in file("./modules/shared") settings(
