@@ -1,0 +1,5 @@
+GET     /                                                       controllers.GameController.index
+GET     /stage                                                  controllers.GameController.stage()
+GET     /ws                                                     controllers.GameController.webSocket
+
+GET     /assets/*file                                           controllers.Assets.versioned(path="/public", file: Asset)
