@@ -19,8 +19,13 @@ object AgentMoves extends Engine.Phase {
             case Direction.Right => agent.position.right(delta)
           }
         }
-      AgentMoved(agentId, newPosition)
-    }
+        val cell = state.stage.map(newPosition)
+        cell match {
+          case Ground =>
+            AgentMoved(agentId, newPosition) :: Nil
+          case _ => Nil
+        }
+    }.flatten
 }
 
 case class Engine(run: (GameState, Seq[Signal]) => (GameState, Seq[GameEvent]))
