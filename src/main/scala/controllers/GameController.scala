@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import akka.stream.scaladsl.Flow
 import com.github.devnfun.grenadier.model._
-import com.github.devnfun.grenadier.protocol.{ArrowPressed, ClientEvent}
+import com.github.devnfun.grenadier.protocol.{ArrowPressed, BombDropped, ClientEvent}
 import io.circe.generic.auto._
 import io.circe.syntax._
 import model.GameRegistry
@@ -30,6 +30,7 @@ class GameController @Inject()(registry: GameRegistry) extends Controller with C
           _.flatMap(_.as[ClientEvent]).getOrElse(sys.error("wrong message format")))
         .map {
           case ArrowPressed(direction) => Move(0, direction)
+          case BombDropped => DropBomb(0)
         }
     val events =
       Flow.fromFunction { events: Seq[GameEvent] =>

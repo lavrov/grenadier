@@ -1,7 +1,7 @@
 package com.github.devnfun.grenadier
 
 import com.github.devnfun.grenadier.model._
-import com.github.devnfun.grenadier.protocol.{ArrowPressed, ClientEvent}
+import com.github.devnfun.grenadier.protocol.{ArrowPressed, BombDropped, ClientEvent}
 import io.circe.Encoder
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Ajax, KeyCode}
@@ -52,6 +52,7 @@ object Main extends js.JSApp {
         case KeyCode.Up => ArrowPressed(Direction.Up)
         case KeyCode.Left => ArrowPressed(Direction.Left)
         case KeyCode.Right => ArrowPressed(Direction.Right)
+        case KeyCode.Space => BombDropped
       }
       .foreach( message =>
         webSocket.send(MessageEncoder(message).toString)
@@ -73,6 +74,7 @@ object Main extends js.JSApp {
         val style = cell match {
           case Wall => "grey"
           case Ground => "white"
+          case _ => sys.error("unknown cell type")
         }
         val x = position.x * gridStep
         val y = position.y * gridStep
@@ -82,10 +84,20 @@ object Main extends js.JSApp {
         ctx.fill()
     }
 
+    state.stage.bombs.foreach { bomb =>
+      ctx.beginPath()
+      ctx.fillStyle = "red"
+      val radius = gridStep / 2
+      val x = bomb.position.x * gridStep + radius
+      val y = bomb.position.y * gridStep + radius
+      ctx.arc(x, y, radius, 0, Math.PI * 2, false)
+      ctx.fill()
+    }
+
     state.stage.agents.foreach {
       case (index, agent) =>
         ctx.beginPath()
-        ctx.fillStyle = "red"
+        ctx.fillStyle = "blue"
         val radius = gridStep / 2
         val x = agent.position.x * gridStep + radius
         val y = agent.position.y * gridStep + radius

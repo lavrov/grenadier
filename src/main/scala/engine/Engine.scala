@@ -28,6 +28,18 @@ object AgentMoves extends Engine.Phase {
     }.flatten
 }
 
+object AgentBombs extends Engine.Phase {
+  def apply(state: GameState, signals: Seq[Signal]) = signals.collect {
+    case DropBomb(agentId) =>
+      val agent = state.stage.agents(agentId)
+      val cell = state.stage.map(agent.position)
+      PartialFunction.condOpt(cell){
+        case Ground =>
+          AgentDroppedBomb(agentId, agent.position)
+      }.toList
+  }.flatten
+}
+
 case class Engine(run: (GameState, Seq[Signal]) => (GameState, Seq[GameEvent]))
 
 object Engine {

@@ -18,7 +18,7 @@ object Direction extends Enumeration {
   val Up, Down, Left, Right = Value
 }
 
-case class Bomb(countDown: Long, power: Int, position: Position, direction: Option[Direction.Value])
+case class Bomb(position: Position)
 
 case class Agent(position: Position, direction: Direction.Value)
 
@@ -32,7 +32,7 @@ case object Wall extends Cell
 object Cell
 
 @JsonCodec
-case class Stage(map: Map[Position, Cell], agents: Map[Int, Agent])
+case class Stage(map: Map[Position, Cell], agents: Map[Int, Agent], bombs: List[Bomb])
 
 object Stage {
   import io.circe.generic.auto._

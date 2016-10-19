@@ -5,6 +5,6 @@ import io.circe.generic.JsonCodec
 @JsonCodec()
 sealed trait Signal
 case class Move(agentId: Int, direction: Direction.Value) extends Signal
-case object DropBomb extends Signal
+case class DropBomb(agentId: Int) extends Signal
 
 object Signal
