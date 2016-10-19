@@ -36,9 +36,6 @@ object Main extends js.JSApp {
 
     val wsUrl = WebSocketUrlBuilder.fullUrl("/ws")
     val webSocket = new dom.WebSocket(wsUrl)
-    webSocket.onopen = { _: Event =>
-//      dom.window.alert("Opened WS connection")
-    }
     webSocket.onmessage = { message: MessageEvent =>
       val data = message.data.asInstanceOf[String]
       val events = io.circe.parser.parse(data).flatMap(_.as[List[GameEvent]]).getOrElse(
