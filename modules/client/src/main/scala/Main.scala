@@ -30,8 +30,8 @@ object Main extends js.JSApp {
     var state = initState
     val canvas = dom.document.createElement("canvas").asInstanceOf[Canvas]
 
-    canvas.width = 600
-    canvas.height = 600
+    canvas.width = (state.stage.map.keys.map(_.x).max + 1) * gridStep
+    canvas.height = (state.stage.map.keys.map(_.y).max + 1) * gridStep
     dom.document.body.appendChild(canvas)
 
     val wsUrl = WebSocketUrlBuilder.fullUrl("/ws")
