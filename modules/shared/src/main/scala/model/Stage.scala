@@ -31,6 +31,7 @@ case object Ice extends Cell
 //case object Wall extends Cell
 object Cell
 
+@JsonCodec
 case class Stage(map: Map[Position, Cell], agents: Map[Int, Agent])
 
 object Stage {
@@ -41,6 +42,4 @@ object Stage {
     val Array(x, y) = str.split(',').map(_.toInt)
     Some(Position(x, y))
   }
-  implicit val encoder = Encoder[Stage]
-  implicit val decoder = Decoder[Stage]
 }
