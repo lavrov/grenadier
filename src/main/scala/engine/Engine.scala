@@ -2,13 +2,13 @@ package com.github.devnfun.grenadier.engine
 
 import com.github.devnfun.grenadier.model._
 
-class AgentMoves extends Engine.Phase {
-  def apply(stage: Stage, signals: Seq[Signal]) =
+object AgentMoves extends Engine.Phase {
+  def apply(state: GameState, signals: Seq[Signal]) =
     signals.collect {
       case Move(agentId, direction) =>
-        val agent = stage.agents(agentId)
+        val agent = state.stage.agents(agentId)
         val newPosition = {
-          val delta = stage.map(agent.position) match {
+          val delta = state.stage.map(agent.position) match {
             case Ice => 2
             case _ => 1
           }
@@ -23,17 +23,21 @@ class AgentMoves extends Engine.Phase {
     }
 }
 
-object Engine {
-  type Phase = (Stage, Seq[Signal]) => Seq[StageEvent]
-  type Engine = (Stage, Seq[Signal]) => (Stage, Seq[StageEvent])
+case class Engine(run: (GameState, Seq[Signal]) => (GameState, Seq[GameEvent]))
 
-  def apply(phase: Phase*): Engine = {
-    phase.foldLeft[Engine]((stage, signals) => (stage, Nil)){
-      case (engine, phase) => (stage, signals) => {
-        val (e1Stage, e1Events) = engine(stage, signals)
-        val e2Events = phase(e1Stage, signals)
-        val e2Stage = StageMutation(e1Stage, e2Events)
-        (e2Stage, e1Events ++ e2Events)
+object Engine {
+  val Unit = Engine((stage, signals) => (stage, Nil))
+  type Phase = (GameState, Seq[Signal]) => Seq[GameEvent]
+
+  def fromPhases(phases: Phase*) = {
+    phases.foldLeft(Unit) {
+      case (engine, phase) => Engine {
+        (stage, signals) => {
+          val (e1Stage, e1Events) = engine.run(stage, signals)
+          val e2Events = phase(e1Stage, signals)
+          val e2Stage = GameMutation(e1Stage, e2Events)
+          (e2Stage, e1Events ++ e2Events)
+        }
       }
     }
   }

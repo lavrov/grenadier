@@ -1,33 +1,33 @@
 package com.github.devnfun.grenadier
 
 import com.github.devnfun.grenadier.model._
-import io.circe.{Decoder, Encoder, KeyDecoder}
+import com.github.devnfun.grenadier.protocol.{ArrowPressed, ClientEvent}
+import io.circe.Encoder
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Ajax, KeyCode}
-import org.scalajs.dom.{CanvasRenderingContext2D, Event, MessageEvent}
 import org.scalajs.dom.html.Canvas
+import org.scalajs.dom.{Event, MessageEvent}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 
 object Main extends js.JSApp {
 
-  implicit val SignalEncoder = Encoder[Signal]
-  implicit val StageDecoder = Decoder[Stage]
+  implicit val MessageEncoder = Encoder[ClientEvent]
 
   val gridStep = 10
 
   def main() = {
-    Ajax.get("/stage").map { response =>
-      val stage = io.circe.parser.parse(response.responseText).flatMap(_.as(StageDecoder)).getOrElse(
-        throw new Exception("not a Stage")
+    Ajax.post("/newGame").map { response =>
+      val stage = io.circe.parser.parse(response.responseText).flatMap(_.as[GameState]).getOrElse(
+        throw new Exception("wrong game format")
       )
       init(stage)
     }
   }
 
-  def init(initStage: Stage) = {
-    var stage = initStage
+  def init(initState: GameState) = {
+    var state = initState
     val canvas = dom.document.createElement("canvas").asInstanceOf[Canvas]
 
     canvas.width = 600
@@ -41,37 +41,36 @@ object Main extends js.JSApp {
     }
     webSocket.onmessage = { message: MessageEvent =>
       val data = message.data.asInstanceOf[String]
-      val events = io.circe.parser.parse(data).flatMap(_.as[List[StageEvent]]).getOrElse(
+      val events = io.circe.parser.parse(data).flatMap(_.as[List[GameEvent]]).getOrElse(
         throw new Exception("wrong message format")
       )
 
-      stage = StageMutation(stage, events)
-      render(stage, canvas)
+      state = GameMutation(state, events)
+      render(state, canvas)
     }
 
     dom.window.addEventListener("keydown", (e: dom.KeyboardEvent) => {
-      val signal =
-        PartialFunction.condOpt(e.keyCode) {
-          case KeyCode.Down => Move(0, Direction.Down)
-          case KeyCode.Up => Move(0, Direction.Up)
-          case KeyCode.Left => Move(0, Direction.Left)
-          case KeyCode.Right => Move(0, Direction.Right)
-        }
-      signal.foreach(s =>
-        webSocket.send(SignalEncoder(s).toString())
+      PartialFunction.condOpt(e.keyCode) {
+        case KeyCode.Down => ArrowPressed(Direction.Down)
+        case KeyCode.Up => ArrowPressed(Direction.Up)
+        case KeyCode.Left => ArrowPressed(Direction.Left)
+        case KeyCode.Right => ArrowPressed(Direction.Right)
+      }
+      .foreach( message =>
+        webSocket.send(MessageEncoder(message).toString)
       )
     }, false)
 
-    render(stage, canvas)
+    render(state, canvas)
   }
 
-  def render(stage: Stage, canvas: Canvas) = {
+  def render(state: GameState, canvas: Canvas) = {
     val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
 
     ctx.fillStyle = "rgb(20, 250, 250)"
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    stage.agents.foreach {
+    state.stage.agents.foreach {
       case (index, agent) =>
         ctx.beginPath()
         ctx.arc(agent.position.x * gridStep, agent.position.y * gridStep, gridStep / 2, 0, Math.PI * 2, false)
