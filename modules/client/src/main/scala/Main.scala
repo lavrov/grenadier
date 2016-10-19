@@ -15,7 +15,7 @@ object Main extends js.JSApp {
 
   implicit val MessageEncoder = Encoder[ClientEvent]
 
-  val gridStep = 10
+  val gridStep = 30
 
   def main() = {
     Ajax.post("/newGame").map { response =>
@@ -70,15 +70,30 @@ object Main extends js.JSApp {
     ctx.fillStyle = "rgb(20, 250, 250)"
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
+    state.stage.map.foreach {
+      case (position, cell) =>
+        ctx.beginPath()
+        val style = cell match {
+          case Wall => "grey"
+          case Ground => "white"
+        }
+        val x = position.x * gridStep
+        val y = position.y * gridStep
+        ctx.rect(x, y, gridStep, gridStep)
+        ctx.fillRect(x, y, gridStep, gridStep)
+        ctx.fillStyle = style
+        ctx.fill()
+    }
+
     state.stage.agents.foreach {
       case (index, agent) =>
         ctx.beginPath()
-        ctx.arc(agent.position.x * gridStep, agent.position.y * gridStep, gridStep / 2, 0, Math.PI * 2, false)
         ctx.fillStyle = "red"
+        val radius = gridStep / 2
+        val x = agent.position.x * gridStep + radius
+        val y = agent.position.y * gridStep + radius
+        ctx.arc(x, y, radius, 0, Math.PI * 2, false)
         ctx.fill()
-        ctx.lineWidth = 2
-        ctx.strokeStyle = "#003300"
-        ctx.stroke()
     }
   }
 }

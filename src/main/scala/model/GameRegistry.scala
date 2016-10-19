@@ -4,13 +4,25 @@ import java.util.UUID
 import javax.inject.Inject
 
 import com.github.devnfun.grenadier.model._
+import com.github.devnfun.grenadier.utils.MapFactory
 
 class GameRegistry @Inject()(factory: GameFactory) {
   var registry = Map.empty[String, Game]
 
   def `new`() = {
     val stage = Stage(
-      Map.empty.withDefaultValue(Ground),
+      MapFactory.simple(
+        """■■■■■■■■■■
+          |■        ■
+          |■        ■
+          |■        ■
+          |■        ■
+          |■        ■
+          |■        ■
+          |■        ■
+          |■        ■
+          |■■■■■■■■■■""".stripMargin
+      ).withDefaultValue(Abyss),
       Map(0 -> Agent(Position(0, 0), Direction.Up))
     )
     val initState = GameState(GameState.Active, stage)

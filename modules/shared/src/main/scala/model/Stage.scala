@@ -28,7 +28,7 @@ case object Ground extends Cell
 //case class Arrow(direction: Direction.Value) extends Cell
 case object Ice extends Cell
 //case object Box extends Cell
-//case object Wall extends Cell
+case object Wall extends Cell
 object Cell
 
 @JsonCodec
