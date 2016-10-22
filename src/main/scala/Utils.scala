@@ -24,7 +24,7 @@ object MapFactory {
 //    '↓' -> Arrow(Direction.Down),
     ' ' -> Ground,
     '■' -> Wall,
-//    '#' -> Box,
+    '#' -> Box,
     'i' -> Ice
   )
 }

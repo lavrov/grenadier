@@ -74,6 +74,7 @@ object Main extends js.JSApp {
         val style = cell match {
           case Wall => "grey"
           case Ground => "white"
+          case Box => "#DFCF8F"
           case _ => sys.error("unknown cell type")
         }
         val x = position.x * gridStep

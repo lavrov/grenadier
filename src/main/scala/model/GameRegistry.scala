@@ -14,9 +14,9 @@ class GameRegistry @Inject()(factory: GameFactory) {
       MapFactory.simple(
         """■■■■■■■■■■■■■■■■■■■■
           |■                  ■
-          |■                  ■
-          |■                  ■
-          |■                  ■
+          |■     #            ■
+          |■    ###           ■
+          |■     #            ■
           |■         ■        ■
           |■         ■        ■
           |■         ■        ■
