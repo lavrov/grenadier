@@ -18,7 +18,7 @@ object Direction extends Enumeration {
   val Up, Down, Left, Right = Value
 }
 
-case class Bomb(position: Position)
+case class Bomb(position: Position, countDown: Int)
 
 case class Agent(position: Position, direction: Direction.Value)
 

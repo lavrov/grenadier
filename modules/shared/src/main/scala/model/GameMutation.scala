@@ -12,7 +12,19 @@ object GameMutation {
         case AgentDroppedBomb(agentId, position) =>
           game.copy(stage =
             game.stage.copy(bombs =
-              Bomb(position) :: game.stage.bombs
+              Bomb(position, 5) :: game.stage.bombs
+            )
+          )
+        case BombsTimerDown =>
+          game.copy(stage =
+            game.stage.copy(bombs =
+              game.stage.bombs.map(b => b.copy(countDown = b.countDown - 1))
+            )
+          )
+        case BombExploded(position) =>
+          game.copy(stage =
+            game.stage.copy(bombs =
+              game.stage.bombs.filterNot(_.position == position)
             )
           )
         case _ => game

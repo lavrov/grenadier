@@ -40,6 +40,17 @@ object AgentBombs extends Engine.Phase {
   }.flatten
 }
 
+object BombCountDown extends Engine.Phase {
+  def apply(state: GameState, signals: Seq[Signal]) = BombsTimerDown :: Nil
+}
+
+object BombExplosions extends Engine.Phase {
+  def apply(state: GameState, signals: Seq[Signal]) = {
+    state.stage.bombs.filter(_.countDown <= 0)
+      .map(bomb => BombExploded(bomb.position))
+  }
+}
+
 case class Engine(run: (GameState, Seq[Signal]) => (GameState, Seq[GameEvent]))
 
 object Engine {
