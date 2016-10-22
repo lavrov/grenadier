@@ -12,16 +12,16 @@ class GameRegistry @Inject()(factory: GameFactory) {
   def `new`() = {
     val stage = Stage(
       MapFactory.simple(
-        """■■■■■■■■■■
-          |■        ■
-          |■        ■
-          |■        ■
-          |■        ■
-          |■        ■
-          |■        ■
-          |■        ■
-          |■        ■
-          |■■■■■■■■■■""".stripMargin
+        """■■■■■■■■■■■■■■■■■■■■
+          |■                  ■
+          |■                  ■
+          |■                  ■
+          |■                  ■
+          |■         ■        ■
+          |■         ■        ■
+          |■         ■        ■
+          |■                  ■
+          |■■■■■■■■■■■■■■■■■■■■""".stripMargin
       ).withDefaultValue(Abyss),
       Map(0 -> Agent(Position(1, 1), Direction.Up)),
       Nil
