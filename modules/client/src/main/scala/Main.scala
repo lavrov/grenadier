@@ -84,16 +84,6 @@ object Main extends js.JSApp {
         ctx.fill()
     }
 
-    state.stage.bombs.foreach { bomb =>
-      ctx.beginPath()
-      ctx.fillStyle = "red"
-      val radius = gridStep / 2
-      val x = bomb.position.x * gridStep + radius
-      val y = bomb.position.y * gridStep + radius
-      ctx.arc(x, y, radius, 0, Math.PI * 2, false)
-      ctx.fill()
-    }
-
     state.stage.agents.foreach {
       case (index, agent) =>
         ctx.beginPath()
@@ -103,6 +93,18 @@ object Main extends js.JSApp {
         val y = agent.position.y * gridStep + radius
         ctx.arc(x, y, radius, 0, Math.PI * 2, false)
         ctx.fill()
+    }
+
+    state.stage.bombs.foreach { bomb =>
+      ctx.beginPath()
+      ctx.fillStyle = "red"
+      val radius = gridStep / 2
+      val x = bomb.position.x * gridStep + radius
+      val y = bomb.position.y * gridStep + radius
+      ctx.arc(x, y, radius, 0, Math.PI * 2, false)
+      ctx.fill()
+      ctx.beginPath()
+      ctx.strokeText(bomb.countDown.toString, x, y)
     }
   }
 }

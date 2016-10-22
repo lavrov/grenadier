@@ -16,16 +16,15 @@ case class Game(
 )
 
 class GameFactory @Inject()(engine: Engine, materializer: Materializer) {
-  val interval = 1.second
+  val interval = 200.millis
 
   def create(initialStage: GameState) = {
     var _state = initialStage
-    val ticker = Source.tick(interval, interval, ()).map(_ => 1).scan(0)(_ + _)
-    val signalSource = MergeHub.source[Signal]
-      .conflateWithSeed(List(_)) { case (list, signal) => signal :: list }
+    val ticker = Source.tick(interval, interval, Nil: List[Signal])
+    val signalSource = MergeHub.source[Signal].groupedWithin(Int.MaxValue, interval)
     val (signalSink, eventSource) =
-      signalSource.zip(ticker)
-        .map { case (signals, time) =>
+      signalSource.merge(ticker)
+        .map { signals =>
           val (newStage, events) = engine.run(_state, signals)
           _state = newStage
           events
