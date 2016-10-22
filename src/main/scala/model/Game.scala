@@ -8,6 +8,8 @@ import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Source}
 import com.github.devnfun.grenadier.engine.Engine
 import com.github.devnfun.grenadier.model.{GameEvent, GameState, Signal}
 
+import cats.instances.list._
+
 import scala.concurrent.duration._
 
 case class Game(
@@ -16,15 +18,16 @@ case class Game(
 )
 
 class GameFactory @Inject()(engine: Engine, materializer: Materializer) {
-  val interval = 200.millis
+  val interval = 100.millis
 
   def create(initialStage: GameState) = {
     var _state = initialStage
-    val ticker = Source.tick(interval, interval, Nil: List[Signal])
-    val signalSource = MergeHub.source[Signal].groupedWithin(Int.MaxValue, interval)
+    val ticker = Source.tick(interval, interval, 1).scan(0l)(_ + _)
+    val accumulator = new Accumulate[Signal, List]
+    val signalSource = MergeHub.source[Signal].via(accumulator)
     val (signalSink, eventSource) =
-      signalSource.merge(ticker)
-        .map { signals =>
+      signalSource.zip(ticker)
+        .map { case (signals, tick) =>
           val (newStage, events) = engine.run(_state, signals)
           _state = newStage
           events
