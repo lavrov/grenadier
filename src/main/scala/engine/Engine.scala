@@ -47,7 +47,19 @@ object BombCountDown extends Engine.Phase {
 object BombExplosions extends Engine.Phase {
   def apply(state: GameState, signals: Seq[Signal]) = {
     state.stage.bombs.filter(_.countDown <= 0)
-      .map(bomb => BombExploded(bomb.position))
+      .flatMap { bomb =>
+        val onFire =
+          bomb.position.up(1) ::
+          bomb.position.down(1) ::
+          bomb.position.left(1) ::
+          bomb.position.right(1) :: Nil
+
+        BombExploded(bomb.position) ::
+        onFire.map(p => (p, state.stage.map(p))).collect {
+          case (position, Box) =>
+            BoxDestroyed(position)
+        }
+      }
   }
 }
 

@@ -27,6 +27,12 @@ object GameMutation {
               game.stage.bombs.filterNot(_.position == position)
             )
           )
+        case BoxDestroyed(position) =>
+          game.copy(stage =
+            game.stage.copy(map =
+              game.stage.map.updated(position, Ground)
+            )
+          )
         case _ => game
       }
   }
