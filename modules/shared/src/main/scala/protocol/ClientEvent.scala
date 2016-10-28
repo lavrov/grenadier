@@ -6,7 +6,12 @@ import io.circe.generic.JsonCodec
 @JsonCodec
 sealed trait ClientEvent
 
-case class ArrowPressed(direction: Direction.Value) extends ClientEvent
-case object BombDropped extends ClientEvent
+@JsonCodec
+sealed trait Key
+case class ArrowKey(direction: Direction.Value) extends Key
+case object BombKey extends Key
+object Key
+
+case class KeyboardEvent(isDown: Boolean, key: Key) extends ClientEvent
 
 object ClientEvent

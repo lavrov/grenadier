@@ -2,12 +2,12 @@ package controllers
 
 import javax.inject.Inject
 
-import akka.stream.scaladsl.Flow
+import akka.stream.scaladsl.{Flow, Source}
 import com.github.devnfun.grenadier.model._
-import com.github.devnfun.grenadier.protocol.{ArrowPressed, BombDropped, ClientEvent}
+import com.github.devnfun.grenadier.protocol.ClientEvent
 import io.circe.generic.auto._
 import io.circe.syntax._
-import model.GameRegistry
+import model.{ClientSignal, GameRegistry}
 import play.api.libs.circe.Circe
 import play.api.mvc._
 
@@ -24,19 +24,16 @@ class GameController @Inject()(registry: GameRegistry) extends Controller with C
   }
 
   def webSocket = WebSocket.accept[String, String] { req =>
-    val signals =
+    val signals: Flow[String, ClientSignal, _] =
       Flow.fromFunction(io.circe.parser.parse(_: String))
         .map(
           _.flatMap(_.as[ClientEvent]).getOrElse(sys.error("wrong message format")))
-        .map {
-          case ArrowPressed(direction) => Move(0, direction)
-          case BombDropped => DropBomb(0)
-        }
+        .via(ClientSignal.fromEvents(0))
     val events =
       Flow.fromFunction { events: Seq[GameEvent] =>
         events.asJson.toString
       }
-    signals via game.flow via events
+    signals.prefixAndTail(0).map(_._2) via game.flow via events
   }
 
 }

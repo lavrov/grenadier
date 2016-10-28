@@ -1,22 +1,25 @@
 package com.github.devnfun.grenadier.engine
 
 import com.github.devnfun.grenadier.model._
+import model.ClientSignal
 
 object AgentMoves extends Engine.Phase {
-  def apply(state: GameState, signals: Seq[Signal]) =
-    signals.collect {
-      case Move(agentId, direction) =>
+  def apply(state: GameState, signals: Seq[ClientSignal]) =
+    signals.flatMap {
+      case ClientSignal(agentId, signal) =>
         val agent = state.stage.agents(agentId)
         val newPosition = {
           val delta = state.stage.map(agent.position) match {
             case Ice => 2
             case _ => 1
           }
-          direction match {
-            case Direction.Up => agent.position.up(delta)
-            case Direction.Down => agent.position.down(delta)
-            case Direction.Left => agent.position.left(delta)
-            case Direction.Right => agent.position.right(delta)
+          signal.move.toList.foldLeft(agent.position) { case (position, direction) =>
+            direction match {
+              case Direction.Up => agent.position.up(delta)
+              case Direction.Down => agent.position.down(delta)
+              case Direction.Left => agent.position.left(delta)
+              case Direction.Right => agent.position.right(delta)
+            }
           }
         }
         val cell = state.stage.map(newPosition)
@@ -25,12 +28,13 @@ object AgentMoves extends Engine.Phase {
             AgentMoved(agentId, newPosition) :: Nil
           case _ => Nil
         }
-    }.flatten
+    }
 }
 
 object AgentBombs extends Engine.Phase {
-  def apply(state: GameState, signals: Seq[Signal]) = signals.collect {
-    case DropBomb(agentId) =>
+  def apply(state: GameState, signals: Seq[ClientSignal]) = signals.collect {
+    case signal if signal.signal.bomb =>
+      val agentId = signal.clientId
       val agent = state.stage.agents(agentId)
       val cell = state.stage.map(agent.position)
       PartialFunction.condOpt(cell){
@@ -41,11 +45,11 @@ object AgentBombs extends Engine.Phase {
 }
 
 object BombCountDown extends Engine.Phase {
-  def apply(state: GameState, signals: Seq[Signal]) = BombsTimerDown :: Nil
+  def apply(state: GameState, signals: Seq[ClientSignal]) = BombsTimerDown :: Nil
 }
 
 object BombExplosions extends Engine.Phase {
-  def apply(state: GameState, signals: Seq[Signal]) = {
+  def apply(state: GameState, signals: Seq[ClientSignal]) = {
     state.stage.bombs.filter(_.countDown <= 0)
       .flatMap { bomb =>
         val onFire =
@@ -63,11 +67,11 @@ object BombExplosions extends Engine.Phase {
   }
 }
 
-case class Engine(run: (GameState, Seq[Signal]) => (GameState, Seq[GameEvent]))
+case class Engine(run: (GameState, Seq[ClientSignal]) => (GameState, Seq[GameEvent]))
 
 object Engine {
   val Unit = Engine((stage, signals) => (stage, Nil))
-  type Phase = (GameState, Seq[Signal]) => Seq[GameEvent]
+  type Phase = (GameState, Seq[ClientSignal]) => Seq[GameEvent]
 
   def fromPhases(phases: Phase*) = {
     phases.foldLeft(Unit) {

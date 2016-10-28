@@ -1,7 +1,7 @@
 package com.github.devnfun.grenadier
 
 import com.github.devnfun.grenadier.model._
-import com.github.devnfun.grenadier.protocol.{ArrowPressed, BombDropped, ClientEvent}
+import com.github.devnfun.grenadier.protocol._
 import io.circe.Encoder
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Ajax, KeyCode}
@@ -46,18 +46,23 @@ object Main extends js.JSApp {
       render(state, canvas)
     }
 
-    dom.window.addEventListener("keydown", (e: dom.KeyboardEvent) => {
-      PartialFunction.condOpt(e.keyCode) {
-        case KeyCode.Down => ArrowPressed(Direction.Down)
-        case KeyCode.Up => ArrowPressed(Direction.Up)
-        case KeyCode.Left => ArrowPressed(Direction.Left)
-        case KeyCode.Right => ArrowPressed(Direction.Right)
-        case KeyCode.Space => BombDropped
+    def keyHander(isDown: Boolean) = {
+      (e: dom.KeyboardEvent) => {
+        PartialFunction.condOpt(e.keyCode) {
+          case KeyCode.Down => KeyboardEvent(isDown, ArrowKey(Direction.Down))
+          case KeyCode.Up => KeyboardEvent(isDown, ArrowKey(Direction.Up))
+          case KeyCode.Left => KeyboardEvent(isDown, ArrowKey(Direction.Left))
+          case KeyCode.Right => KeyboardEvent(isDown, ArrowKey(Direction.Right))
+          case KeyCode.Space => KeyboardEvent(isDown, BombKey)
+        }
+        .foreach( message =>
+          webSocket.send(MessageEncoder(message).toString)
+        )
       }
-      .foreach( message =>
-        webSocket.send(MessageEncoder(message).toString)
-      )
-    }, false)
+    }
+
+    dom.window.addEventListener("keydown", keyHander(true) , false)
+    dom.window.addEventListener("keyup", keyHander(false) , false)
 
     render(state, canvas)
   }

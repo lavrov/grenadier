@@ -6,15 +6,13 @@ import akka.NotUsed
 import akka.stream.Materializer
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Source}
 import com.github.devnfun.grenadier.engine.Engine
-import com.github.devnfun.grenadier.model.{GameEvent, GameState, Signal}
-
-import cats.instances.list._
+import com.github.devnfun.grenadier.model.{GameEvent, GameState}
 
 import scala.concurrent.duration._
 
 case class Game(
     state: () => GameState,
-    flow: Flow[Signal, Seq[GameEvent], NotUsed]
+    flow: Flow[Source[ClientSignal, _], Seq[GameEvent], NotUsed]
 )
 
 class GameFactory @Inject()(engine: Engine, materializer: Materializer) {
@@ -23,8 +21,10 @@ class GameFactory @Inject()(engine: Engine, materializer: Materializer) {
   def create(initialStage: GameState) = {
     var _state = initialStage
     val ticker = Source.tick(interval, interval, 1).scan(0l)(_ + _)
-    val accumulator = new Accumulate[Signal, List]
-    val signalSource = MergeHub.source[Signal].via(accumulator)
+    val signalSource =
+      MergeHub.source[Source[ClientSignal, _]]
+        .flatMapMerge(100, signals => signals)
+        .map(_ :: Nil)
     val (signalSink, eventSource) =
       signalSource.zip(ticker)
         .map { case (signals, tick) =>
